@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tutoriel Flask</title>
+</head>
+
+<body>
+    <h1>Tutoriel Flask : Authentification de base avec Flask</h1>
+
+    <p>Ce tutoriel explique un exemple simple d'authentification de base avec Flask. Voici le code Python :</p>
+
+    <pre><code>
+        <strong>from flask import Flask, render_template, request, redirect</strong>
+        <strong>from flask_basicauth import BasicAuth</strong>
+        <strong>from db import *</strong>
+        <strong>from datetime import datetime, timedelta</strong>
+        <strong>import matplotlib</strong>
+        <strong>matplotlib.use('Agg')</strong>
+        <strong>import matplotlib.pyplot as plt</strong>
+
+        <strong>app = Flask(__name__)</strong>
+        <strong>app.config['SECRET_KEY'] = ''  # Clé secrète pour sécuriser les sessions</strong>
+
+        <strong># Nom d'utilisateur et mot de passe intégrés (remplacez-les par les valeurs souhaitées)</strong>
+        <strong>USERNAME = 'Infrasolutions'</strong>
+        <strong>PASSWORD = 'Infra1234'</strong>
+
+        <strong>@app.route('/')</strong>
+        <strong>def index():</strong>
+        <strong>    return render_template('login.html')</strong>
+
+        <strong>@app.route('/login', methods=['POST'])</strong>
+        <strong>def login():</strong>
+        <strong>    username = request.form['username']</strong>
+        <strong>    password = request.form['password']</strong>
+
+        <strong>    # Vérifiez les informations d'identification</strong>
+        <strong>    if username == USERNAME and password == PASSWORD:</strong>
+        <strong>        # Authentification réussie, redirigez vers la page protégée</strong>
+        <strong>        return redirect('/page_entree')</strong>
+        <strong>    else:</strong>
+        <strong>        # Authentification échouée, redirigez vers la page de connexion avec un message d'erreur</strong>
+        <strong>        return render_template('login.html', error='Nom d\'utilisateur ou mot de passe incorrect.')</strong>
+
+        <strong>@app.route('/page_entree')</strong>
+        <strong>def main():</strong>
+        <strong>    return render_template("index.html")</strong>
+
+        <strong>@app.route('/volumetraffic', methods=['GET', 'POST'])</strong>
+        <strong>@basic_auth.required</strong>
+        <strong> def get_datveh_data():</strong>
+                <strong>conn = get_connection()</strong>
+
+                <strong>if request.method == 'POST':</strong>
+                    <strong>selected_concesion = request.form['concesion']</strong>
+                    <strong>selected_etd = request.form['etd']</strong>
+                    <strong>selected_aforos = request.form['aforos']</strong>
+                    <strong>selected_debut_str = request.form['debut']</strong>
+                    <strong>selected_fin_str = request.form['fin']</strong>
+                    <strong>selected_longueurselect = request.form['longueurselect']</strong>
+                    <strong>selected_calzadas = request.form['calzadas']</strong>
+                    <strong>selected_carril = request.form['carril']</strong>
+                    <strong>selected_classe = request.form['classe']</strong>
+                    <strong>selected_longueurinput = request.form['longueurinput']</strong>
+                    <strong>selected_longueurinput = float(selected_longueurinput)</strong>
+                    <strong>selected_longueurinput = selected_longueurinput*100</strong>
+                    <strong>selected_longueurinput = str(selected_longueurinput)</strong>
+
+                    <strong>etd_parts = selected_etd.split('_')</strong>
+                    <strong>num_etd = etd_parts[0]</strong>
+                    <strong>num_etd = int(num_etd)</strong>
+                    <strong>num_calzadas = etd_parts[1].replace('RN', '')</strong>
+                    <strong>num_calzadas = int(num_calzadas)</strong>
+                    <strong>pk = etd_parts[2].split(',')</strong>
+                    <strong>num_pk = pk[0].replace('PK', '')</strong>
+                    <strong>num_pk = float(num_pk)</strong>
+                    <strong>num_longitud = pk[1]</strong>
+                    <strong>num_longitud = float(num_longitud)</strong>
+
+                    <strong>aforos_parts = selected_aforos.split('-')</strong>
+                    <strong>nom_aforos = aforos_parts[0]</strong>
+                    <strong>numero_station = aforos_parts[1]</strong>
+                    <strong>nom_aforos = str(nom_aforos)</strong>
+                    <strong>numero_station = int(numero_station)</strong>
+
+                    <strong># Convertir la chaîne de date et d'heure en objet datetime</strong>
+                    <strong>selected_debut = datetime.strptime(selected_debut_str, '%Y-%m-%dT%H:%M')</strong>
+                    <strong>selected_fin = datetime.strptime(selected_fin_str, '%Y-%m-%dT%H:%M')</strong>
+
+                    <strong>results_datveh=get_query_traffic( selected_concesion, selected_debut, selected_fin, selected_calzadas, </strong>
+                             <strong>selected_carril, selected_longueurselect, selected_longueurinput, selected_classe, num_etd, num_calzadas, </strong>
+                             <strong>num_pk, num_longitud, nom_aforos, numero_station)</strong>
+
+
+                    <strong>return render_template('volumetraffic.html', results_concesion=get_concesion_data(),results_calzadas=get_calzadas_data(), </strong>
+                             <strong>results_carril=get_carril_data(),results_etd=get_etd_data(),results_aforos=get_aforos_data(), selected_concesion=selected_concesion,</strong>
+                             <strong>results_datveh=results_datveh,  selected_debut=selected_debut, selected_fin=selected_fin, selected_longueurselect=selected_longueurselect, </strong>
+                             <strong>selected_longueurinput=selected_longueurinput, selected_calzadas=selected_calzadas, selected_carril=selected_carril, </strong>
+                             <strong>selected_classe=selected_classe, selected_etd=selected_etd, selected_aforos=selected_aforos )</strong>
+
+                <strong>return render_template('volumetraffic.html', results_concesion=get_concesion_data(),results_calzadas=get_calzadas_data(),results_carril=get_carril_data(),</strong>
+                         <strong>results_etd=get_etd_data(), results_aforos=get_aforos_data())</strong>
+
+        <strong>@app.route('/graphique', methods=['GET', 'POST'])</strong>
+        <strong>def graphique():</strong>
+                <strong>conn = get_connection()</strong>
+
+                <strong>if request.method == 'POST':</strong>
+                    <strong>selected_concesion = request.form['concesion']</strong>
+                    <strong>selected_etd = request.form['etd']</strong>
+                    <strong>selected_aforos = request.form['aforos']</strong>
+                    <strong>selected_classe = request.form['classe']</strong>
+                    <strong>selected_repartition = request.form['repartition']</strong>
+
+                    <strong>selected_calzadas = request.form['calzadas']</strong>
+                    <strong>selected_carril = request.form['carril']</strong>
+                    <strong>selected_debut_str = request.form['debut']</strong>
+                    <strong>selected_fin_str = request.form['fin']</strong>
+
+                    <strong>selected_debut = datetime.strptime(selected_debut_str, '%Y-%m-%dT%H:%M')</strong>
+                    <strong>selected_fin = datetime.strptime(selected_fin_str, '%Y-%m-%dT%H:%M')</strong>
+
+                    <strong>etd_parts = selected_etd.split('_')</strong>
+                    <strong>num_etd = etd_parts[0]</strong>
+                    <strong>num_etd = int(num_etd)</strong>
+
+                    <strong>aforos_parts = selected_aforos.split('-')</strong>
+                    <strong>numero_station = aforos_parts[1]</strong>
+                    <strong>numero_station = int(numero_station)</strong>
+
+                    <strong>cursor = conn.cursor()</strong>
+                    <strong>if selected_repartition == 'MONTH':</strong>
+                        <strong>difference = selected_fin - selected_debut</strong>
+                        <strong>if 28 <= difference.days <= 31:</strong>
+                            <strong>results_datvehgrp = get_query_graphique(selected_repartition, selected_concesion, num_etd, selected_calzadas,</strong>
+                                                          <strong>selected_carril, numero_station, selected_classe, selected_debut, selected_fin)</strong>
+                        <strong>else:
+                            <strong>error_month = "L'intervalle de temps pour la répartition mensuelle doit être d'un mois."</strong>
+                            <strong>return render_template('grqphique.html', results_concesion=get_concesion_data(),</strong>
+                                                   <strong>results_calzadas=get_calzadas_data(), results_carril=get_carril_data(),</strong>
+                                                   <strong>results_etd=get_etd_data(), results_aforos=get_aforos_data(),</strong>
+                                                   <strong>error_month=error_month)</strong>
+                    <strong>elif selected_repartition == 'DAY':</strong>
+                        <strong>difference = selected_fin - selected_debut</strong>
+                        <strong>if difference.days == 1:</strong>
+                            <strong>results_datvehgrp = get_query_graphique(selected_repartition, selected_concesion, num_etd, selected_calzadas,</strong>
+                                                          <strong>selected_carril, numero_station, selected_classe, selected_debut, selected_fin)</strong>
+                        <strong>else:
+                            <strong>error_message = "L'intervalle de temps pour la répartition quotidienne doit être d'un jour."</strong>
+                            <strong>return render_template('graphique.html', results_concesion=get_concesion_data(),</strong>
+                                                   <strong>results_calzadas=get_calzadas_data(), results_carril=get_carril_data(),</strong>
+                                                   <strong>results_etd=get_etd_data(), results_aforos=get_aforos_data(),</strong>
+                                                   <strong>error_message=error_message)</strong>
+                    <strong>elif selected_repartition == 'WEEK':</strong>
+                            <strong>if (selected_fin - selected_debut).days == 6 and selected_debut.weekday() == 0 and selected_fin.weekday() == 6:</strong>
+                                <strong>results_datvehgrp = get_query_graphique(selected_repartition, selected_concesion, num_etd, selected_calzadas,</strong>
+                                                              <strong>selected_carril, numero_station, selected_classe, selected_debut,selected_fin)</strong>
+                            <strong>else:
+                                <strong>error_message = "L'intervalle de temps pour la répartition hebdomadaire doit être exactement d'une semaine (du lundi au dimanche)."</strong>
+                                <strong>return render_template('graphique.html', results_concesion=get_concesion_data(), results_calzadas=get_calzadas_data(), </strong>
+                                               <strong>results_carril=get_carril_data(), results_etd=get_etd_data(), results_aforos=get_aforos_data(), error_message=error_message)</strong>
+                    <strong>else:
+                        <strong>difference = selected_fin - selected_debut</strong>
+                        <strong>if 365 <= difference.days <= 366:</strong>
+                            <strong>results_datvehgrp = get_query_graphique(selected_repartition, selected_concesion, num_etd, selected_calzadas,</strong>
+                                                          <strong>selected_carril, numero_station, selected_classe, selected_debut,selected_fin)</strong>
+                        <strong>else:
+                            <strong>error_message = "L'intervalle de temps pour la répartition annuelle doit être d'une année."</strong>
+                            <strong>return render_template('graphique.html', results_concesion=get_concesion_data(),</strong>
+                                                    <strong>results_calzadas=get_calzadas_data(), results_carril=get_carril_data(),</strong>
+                                                    <strong>results_etd=get_etd_data(), results_aforos=get_aforos_data(),</strong>
+                                                    <strong>error_message=error_message)</strong>
+
+                    <strong># Extraire les données de la requête SQL</strong>
+                    <strong>repartition_temporelle = [row[0] for row in results_datvehgrp]</strong>
+                    <strong>nombre_vehicules = [row[1] for row in results_datvehgrp]</strong>
+
+                    <strong>return render_template('graphique.html', results_concesion=get_concesion_data(),</strong>
+                                           <strong>results_calzadas=get_calzadas_data(), results_carril=get_carril_data(),</strong>
+                                           <strong>results_etd=get_etd_data(), results_aforos=get_aforos_data(),selected_concesion=selected_concesion,</strong>
+                                           <strong>selected_calzadas=selected_calzadas,selected_carril=selected_carril,selected_etd=selected_etd,</strong>
+                                           <strong>selected_aforos=selected_aforos, results_datvehgrp=results_datvehgrp, repartition_temporelle=repartition_temporelle,</strong>
+                                           <strong>nombre_vehicules=nombre_vehicules, selected_repartition=selected_repartition,</strong>
+                                           <strong>selected_fin=selected_fin,selected_debut=selected_debut,selected_classe=selected_classe)</strong>
+
+                <strong>return render_template('graphique.html', results_concesion=get_concesion_data(),</strong>
+                                       <strong>results_calzadas=get_calzadas_data(), results_carril=get_carril_data(),</strong>
+                                       <strong>results_etd=get_etd_data(), results_aforos=get_aforos_data())</strong>
+
+
+
+
+
+
+        <strong>if __name__ == '__main__':</strong>
+        <strong>    app.run(debug=True)</strong>
+    </code></pre>
+
+    <h2>Explication du Code :</h2>
+
+    <p>Dans ce code, une nouvelle route Flask <code>/volumetraffic</code> a été ajoutée. Cette route gère à la fois les requêtes GET et POST. Elle effectue diverses opérations liées à la sélection et à la visualisation des données de trafic routier.</p>
+
+    <h2>Authentification de Base :</h2>
+
+    <p>Avant d'accéder à la route <code>/volumetraffic</code>, l'authentification de base est requise. Cela signifie que l'utilisateur doit entrer un nom d'utilisateur et un mot de passe valides pour accéder à cette page.</p>
+
+    <h2>Visualisation du Trafic Routier :</h2>
+
+    <p>Dans cette route, les données sélectionnées par l'utilisateur sont utilisées pour générer des graphiques de visualisation du trafic routier. Ces données sont ensuite renvoyées à la page HTML <code>volumetraffic.html</code> pour affichage.</p>
+
+</body>
+
+</html>
+
+</body>
+
+</html>
